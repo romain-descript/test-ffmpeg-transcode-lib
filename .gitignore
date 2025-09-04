@@ -5,3 +5,4 @@ deslib.dSYM
 *.dylib
 main
 node_modules/
+dist/

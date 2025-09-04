@@ -4,3 +4,4 @@ deslib.dSYM
 *.so
 *.dylib
 main
+node_modules/

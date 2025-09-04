@@ -1,5 +1,15 @@
 #include "deslib.h"
 
+int get_eof() { return AVERROR_EOF; }
+int get_eagain() { return AVERROR(EAGAIN); }
+int get_strerror(int err, char *buf, size_t buflen) {
+  int ret = av_strerror(err, buf, buflen);
+  if (ret < 0)
+    return ret;
+
+  return strlen(buf);
+}
+
 void close_handler(handler_t *handler) {
   if (!handler)
     return;
@@ -400,32 +410,33 @@ int flush_encoder(handler_t *handler) {
   return encode_write_frame(1, handler);
 }
 
-int init_handler(const char *input, const char *output, handler_t **handler) {
+handler_t *init_handler(const char *input, const char *output) {
   int ret;
+  handler_t *handler;
 
-  *handler = av_mallocz(sizeof(handler_t));
-  if (!*handler)
-    return AVERROR(ENOMEM);
+  handler = av_mallocz(sizeof(handler_t));
+  if (!handler)
+    return NULL;
 
-  if ((ret = open_input_file(input, *handler)) < 0)
+  if ((ret = open_input_file(input, handler)) < 0)
     goto end;
 
-  if ((ret = open_output_file(output, *handler)) < 0)
+  if ((ret = open_output_file(output, handler)) < 0)
     goto end;
 
-  if ((ret = init_filter(*handler)) < 0)
+  if ((ret = init_filter(handler)) < 0)
     goto end;
 
-  if (!((*handler)->packet = av_packet_alloc())) {
+  if (!(handler->packet = av_packet_alloc())) {
     ret = AVERROR(ENOMEM);
     goto end;
   }
 
-  return 0;
+  return handler;
 
 end:
-  close_handler(*handler);
-  return ret;
+  close_handler(handler);
+  return NULL;
 }
 
 int process_frame(handler_t *handler) {

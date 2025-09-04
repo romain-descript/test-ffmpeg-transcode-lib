@@ -1,0 +1,159 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      ffi-rs:
+        specifier: ^1.3.0
+        version: 1.3.0
+    devDependencies:
+      '@types/node':
+        specifier: ^24.3.1
+        version: 24.3.1
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
+
+packages:
+
+  '@types/node@24.3.1':
+    resolution: {integrity: sha512-3vXmQDXy+woz+gnrTvuvNrPzekOi+Ds0ReMxw0LzBiK3a+1k0kQn9f2NWk+lgD4rJehFUmYy2gMhJ2ZI+7YP9g==}
+
+  '@yuuang/ffi-rs-android-arm64@1.3.0':
+    resolution: {integrity: sha512-1kO6gmoDwZVlEzqbWXkQke8WLGAECOAAjTNBjphPN1sn+ICdUGBfR7TKHMbygspGXpFUFFI7/H75l3Gt8QsaLQ==}
+    engines: {node: '>= 12'}
+    cpu: [arm64]
+    os: [android]
+
+  '@yuuang/ffi-rs-darwin-arm64@1.3.0':
+    resolution: {integrity: sha512-JJOG1MXNV04FN0SWNUSK1i3LJVn76XF15+OcRYl0bWgjYnfsBzXzeIQdAp3wIlDTPPQQ+Z3Fxbb+b7wuf7uIDA==}
+    engines: {node: '>= 12'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@yuuang/ffi-rs-darwin-x64@1.3.0':
+    resolution: {integrity: sha512-YAagzuM6LNqbcFhXMfUFmTT0F+RD6qV59Qe7L20mb5Xf9luipieqs2fEUVU+MAkgXk1gXRj7HczWkI97+qa3Mg==}
+    engines: {node: '>= 12'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@yuuang/ffi-rs-linux-arm-gnueabihf@1.3.0':
+    resolution: {integrity: sha512-RZOU9PcYpaE920dDoDSEL+UQ19CU9MEf9Gm3kKSpb161TPeKzqMZPUEMpbRaww18pPBN1aWbe2BHiyKAO6tTcg==}
+    engines: {node: '>= 12'}
+    cpu: [arm]
+    os: [linux]
+
+  '@yuuang/ffi-rs-linux-arm64-gnu@1.3.0':
+    resolution: {integrity: sha512-US8XxQUja+dK4WTZWy9RD2/N/c4bLpFoH7sNYO+ENEpmfMbrB7Nw2bKvCk/I0OptuV4P3pScRgDD5xk4ztXgEA==}
+    engines: {node: '>= 12'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@yuuang/ffi-rs-linux-arm64-musl@1.3.0':
+    resolution: {integrity: sha512-DQ++kgJ6hks90wnDoY3PSkoxX2DmNI4e/H/gKFLKoOm+3K++se/ZyONwlVvDmOWKt2yTt6SyrxoIO7atr5LQmQ==}
+    engines: {node: '>= 12'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@yuuang/ffi-rs-linux-x64-gnu@1.3.0':
+    resolution: {integrity: sha512-HTk+RUDozycipfL97TsmVhZpJKK3ciTY4gIC6Wlg9dFpwcCscUVH5B6DKctbV/KmCV7r3FMB2eJxQBuLRH1JFg==}
+    engines: {node: '>= 12'}
+    cpu: [x64]
+    os: [linux]
+
+  '@yuuang/ffi-rs-linux-x64-musl@1.3.0':
+    resolution: {integrity: sha512-qpcPQW2AIeuS/CCBZhKEI07JxfoVulFQUHjsx6rhoAC5SVb2V+wcf8X5CkIvwhiRzydelw/uRml5vY0z+ieh1w==}
+    engines: {node: '>= 12'}
+    cpu: [x64]
+    os: [linux]
+
+  '@yuuang/ffi-rs-win32-arm64-msvc@1.3.0':
+    resolution: {integrity: sha512-Dflhd43LH4Y4pcWp3opozPp0b+8xAvxWq8ZyIWf/HhTMYIvWWjBoGo3LvLgzx8R2CdELKMO17dni76qCgJfv1A==}
+    engines: {node: '>= 12'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@yuuang/ffi-rs-win32-ia32-msvc@1.3.0':
+    resolution: {integrity: sha512-auc7WR0fKArxxt2m9HaHWrgJMlkwVg94+AN5TGGwT0RIAJTfc7juExXHwpRcWifDTykooXyGvJdTY351L1BVww==}
+    engines: {node: '>= 12'}
+    cpu: [x64, ia32]
+    os: [win32]
+
+  '@yuuang/ffi-rs-win32-x64-msvc@1.3.0':
+    resolution: {integrity: sha512-GL9q9cyuZXkNomr3DmkwSaTKpRInY8y4efcCLvv8J4oiIRkrUzKUQ9//l26uqGmPGYGtSJ5rjLBX9uDmkhhZjQ==}
+    engines: {node: '>= 12'}
+    cpu: [x64]
+    os: [win32]
+
+  ffi-rs@1.3.0:
+    resolution: {integrity: sha512-xdyaooHKShKvNZE9X7PDn4KdNtZaX8cPPJkIqwsx2b7u4UFk6m1VdzsmCSc6eQDFCbk7LyygU1VDl9VRbmPXEg==}
+
+  typescript@5.9.2:
+    resolution: {integrity: sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
+  undici-types@7.10.0:
+    resolution: {integrity: sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag==}
+
+snapshots:
+
+  '@types/node@24.3.1':
+    dependencies:
+      undici-types: 7.10.0
+
+  '@yuuang/ffi-rs-android-arm64@1.3.0':
+    optional: true
+
+  '@yuuang/ffi-rs-darwin-arm64@1.3.0':
+    optional: true
+
+  '@yuuang/ffi-rs-darwin-x64@1.3.0':
+    optional: true
+
+  '@yuuang/ffi-rs-linux-arm-gnueabihf@1.3.0':
+    optional: true
+
+  '@yuuang/ffi-rs-linux-arm64-gnu@1.3.0':
+    optional: true
+
+  '@yuuang/ffi-rs-linux-arm64-musl@1.3.0':
+    optional: true
+
+  '@yuuang/ffi-rs-linux-x64-gnu@1.3.0':
+    optional: true
+
+  '@yuuang/ffi-rs-linux-x64-musl@1.3.0':
+    optional: true
+
+  '@yuuang/ffi-rs-win32-arm64-msvc@1.3.0':
+    optional: true
+
+  '@yuuang/ffi-rs-win32-ia32-msvc@1.3.0':
+    optional: true
+
+  '@yuuang/ffi-rs-win32-x64-msvc@1.3.0':
+    optional: true
+
+  ffi-rs@1.3.0:
+    optionalDependencies:
+      '@yuuang/ffi-rs-android-arm64': 1.3.0
+      '@yuuang/ffi-rs-darwin-arm64': 1.3.0
+      '@yuuang/ffi-rs-darwin-x64': 1.3.0
+      '@yuuang/ffi-rs-linux-arm-gnueabihf': 1.3.0
+      '@yuuang/ffi-rs-linux-arm64-gnu': 1.3.0
+      '@yuuang/ffi-rs-linux-arm64-musl': 1.3.0
+      '@yuuang/ffi-rs-linux-x64-gnu': 1.3.0
+      '@yuuang/ffi-rs-linux-x64-musl': 1.3.0
+      '@yuuang/ffi-rs-win32-arm64-msvc': 1.3.0
+      '@yuuang/ffi-rs-win32-ia32-msvc': 1.3.0
+      '@yuuang/ffi-rs-win32-x64-msvc': 1.3.0
+
+  typescript@5.9.2: {}
+
+  undici-types@7.10.0: {}

@@ -148,11 +148,18 @@ static int open_output_file(const char *filename, handler_t *handler) {
   handler->stream_ctx->enc_ctx->width = dec_ctx->width;
   handler->stream_ctx->enc_ctx->sample_aspect_ratio =
       dec_ctx->sample_aspect_ratio;
+
   /* take first format from list of supported formats */
-  if (encoder->pix_fmts)
-    handler->stream_ctx->enc_ctx->pix_fmt = encoder->pix_fmts[0];
-  else
+  const enum AVPixelFormat *pix_fmt;
+  err = avcodec_get_supported_config(handler->stream_ctx->enc_ctx, NULL,
+                                     AV_CODEC_CONFIG_PIX_FORMAT, 0,
+                                     (const void **)&pix_fmt, NULL);
+
+  if (err < 0 || *pix_fmt == AV_PIX_FMT_NONE)
     handler->stream_ctx->enc_ctx->pix_fmt = dec_ctx->pix_fmt;
+  else
+    handler->stream_ctx->enc_ctx->pix_fmt = *pix_fmt;
+
   /* video time_base can be set to whatever is handy and supported by
    * encoder */
   handler->stream_ctx->enc_ctx->time_base = av_inv_q(dec_ctx->framerate);

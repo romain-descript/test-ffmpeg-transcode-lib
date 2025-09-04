@@ -28,7 +28,7 @@ void close_handler(handler_t *handler) {
   av_free(handler);
 };
 
-int open_input_file(const char *filename, handler_t *handler) {
+static int open_input_file(const char *filename, handler_t *handler) {
   int err;
 
   if ((err = avformat_open_input(&handler->ifmt_ctx, filename, NULL, NULL)) <
@@ -109,7 +109,7 @@ int open_input_file(const char *filename, handler_t *handler) {
   return 0;
 }
 
-int open_output_file(const char *filename, handler_t *handler) {
+static int open_output_file(const char *filename, handler_t *handler) {
   AVStream *out_stream;
   AVStream *in_stream;
   AVCodecContext *dec_ctx;
@@ -199,7 +199,7 @@ int open_output_file(const char *filename, handler_t *handler) {
   return 0;
 }
 
-int init_filter(handler_t *handler) {
+static int init_filter(handler_t *handler) {
   char args[512];
   int ret = 0;
   const AVFilter *buffersrc = NULL;
@@ -386,7 +386,7 @@ static int filter_encode_write_frame(AVFrame *frame, handler_t *handler) {
   return ret;
 }
 
-static int flush_encoder(handler_t *handler) {
+int flush_encoder(handler_t *handler) {
   if (!(handler->stream_ctx->enc_ctx->codec->capabilities & AV_CODEC_CAP_DELAY))
     return 0;
 

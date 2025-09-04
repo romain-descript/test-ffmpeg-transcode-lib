@@ -32,6 +32,6 @@ typedef struct handler {
 } handler_t;
 
 int init_handler(const char *input, const char *output, handler_t **handler);
-int encode_frame(handler_t *handler);
+int process_frame(handler_t *handler);
 int flush(handler_t *handler);
 void close_handler(handler_t *handler);

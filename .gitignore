@@ -2,3 +2,5 @@ deslib
 deslib.dSYM
 *.o
 *.so
+*.dylib
+main

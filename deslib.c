@@ -487,6 +487,7 @@ int flush(handler_t *handler) {
   return av_write_trailer(handler->ofmt_ctx);
 }
 
+/*
 int main(int argc, char **argv) {
   int ret;
   handler_t *handler;
@@ -519,3 +520,4 @@ end:
 
   return ret ? 1 : 0;
 }
+*/

@@ -1,2 +1,4 @@
 deslib
 deslib.dSYM
+*.o
+*.so

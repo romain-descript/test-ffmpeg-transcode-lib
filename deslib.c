@@ -1,37 +1,9 @@
-#include <libavcodec/avcodec.h>
-#include <libavfilter/buffersink.h>
-#include <libavfilter/buffersrc.h>
-#include <libavformat/avformat.h>
-#include <libavutil/channel_layout.h>
-#include <libavutil/mem.h>
-#include <libavutil/opt.h>
-#include <libavutil/pixdesc.h>
+#include "deslib.h"
 
-typedef struct FilteringContext {
-  AVFilterContext *buffersink_ctx;
-  AVFilterContext *buffersrc_ctx;
-  AVFilterGraph *filter_graph;
+void close_handler(handler_t *handler) {
+  if (!handler)
+    return;
 
-  AVPacket *enc_pkt;
-  AVFrame *filtered_frame;
-} FilteringContext;
-
-typedef struct StreamContext {
-  AVCodecContext *dec_ctx;
-  AVCodecContext *enc_ctx;
-
-  AVFrame *dec_frame;
-} StreamContext;
-
-typedef struct handler {
-  AVFormatContext *ifmt_ctx;
-  AVFormatContext *ofmt_ctx;
-  FilteringContext *filter_ctx;
-  StreamContext *stream_ctx;
-  int stream_idx;
-} handler_t;
-
-static void close_handler(handler_t *handler) {
   if (handler->stream_ctx) {
     avcodec_free_context(&handler->stream_ctx->dec_ctx);
     avcodec_free_context(&handler->stream_ctx->enc_ctx);
@@ -52,9 +24,11 @@ static void close_handler(handler_t *handler) {
     avio_closep(&handler->ofmt_ctx->pb);
 
   avformat_free_context(handler->ofmt_ctx);
+  av_packet_free(&handler->packet);
+  av_free(handler);
 };
 
-static int open_input_file(const char *filename, handler_t *handler) {
+int open_input_file(const char *filename, handler_t *handler) {
   int err;
 
   if ((err = avformat_open_input(&handler->ifmt_ctx, filename, NULL, NULL)) <
@@ -135,7 +109,7 @@ static int open_input_file(const char *filename, handler_t *handler) {
   return 0;
 }
 
-static int open_output_file(const char *filename, handler_t *handler) {
+int open_output_file(const char *filename, handler_t *handler) {
   AVStream *out_stream;
   AVStream *in_stream;
   AVCodecContext *dec_ctx;
@@ -225,7 +199,7 @@ static int open_output_file(const char *filename, handler_t *handler) {
   return 0;
 }
 
-static int init_filter(handler_t *handler) {
+int init_filter(handler_t *handler) {
   char args[512];
   int ret = 0;
   const AVFilter *buffersrc = NULL;
@@ -419,14 +393,103 @@ static int flush_encoder(handler_t *handler) {
   return encode_write_frame(1, handler);
 }
 
+int init_handler(const char *input, const char *output, handler_t **handler) {
+  int ret;
+
+  *handler = av_mallocz(sizeof(handler_t));
+  if (!*handler)
+    return AVERROR(ENOMEM);
+
+  if ((ret = open_input_file(input, *handler)) < 0)
+    goto end;
+
+  if ((ret = open_output_file(output, *handler)) < 0)
+    goto end;
+
+  if ((ret = init_filter(*handler)) < 0)
+    goto end;
+
+  if (!((*handler)->packet = av_packet_alloc())) {
+    ret = AVERROR(ENOMEM);
+    goto end;
+  }
+
+  return 0;
+
+end:
+  close_handler(*handler);
+  return ret;
+}
+
+int process_frame(handler_t *handler) {
+  int ret, stream_index = -1;
+
+  while (stream_index != handler->stream_idx) {
+    if ((ret = av_read_frame(handler->ifmt_ctx, handler->packet)) < 0)
+      return ret;
+
+    stream_index = handler->packet->stream_index;
+  }
+
+  ret = avcodec_send_packet(handler->stream_ctx->dec_ctx, handler->packet);
+  if (ret < 0)
+    return ret;
+
+  while (ret >= 0) {
+    ret = avcodec_receive_frame(handler->stream_ctx->dec_ctx,
+                                handler->stream_ctx->dec_frame);
+    if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
+      break;
+    else if (ret < 0)
+      return ret;
+
+    handler->stream_ctx->dec_frame->pts =
+        handler->stream_ctx->dec_frame->best_effort_timestamp;
+    ret = filter_encode_write_frame(handler->stream_ctx->dec_frame, handler);
+    if (ret < 0)
+      return ret;
+  }
+
+  return 0;
+}
+
+int flush(handler_t *handler) {
+  int ret;
+
+  ret = avcodec_send_packet(handler->stream_ctx->dec_ctx, NULL);
+  if (ret < 0)
+    return ret;
+
+  while (ret >= 0) {
+    ret = avcodec_receive_frame(handler->stream_ctx->dec_ctx,
+                                handler->stream_ctx->dec_frame);
+    if (ret == AVERROR_EOF)
+      break;
+    else if (ret < 0)
+      return ret;
+
+    handler->stream_ctx->dec_frame->pts =
+        handler->stream_ctx->dec_frame->best_effort_timestamp;
+
+    ret = filter_encode_write_frame(handler->stream_ctx->dec_frame, handler);
+    if (ret < 0)
+      return ret;
+  }
+
+  ret = filter_encode_write_frame(NULL, handler);
+  if (ret < 0)
+    return ret;
+
+  ret = flush_encoder(handler);
+  if (ret < 0)
+    return ret;
+
+  return av_write_trailer(handler->ofmt_ctx);
+}
+
 int main(int argc, char **argv) {
   int ret;
-  AVPacket *packet = NULL;
-  unsigned int stream_index;
-  unsigned int i;
-  handler_t handler;
-
-  memset(&handler, 0, sizeof(handler_t));
+  handler_t *handler;
 
   if (argc != 3) {
     av_log(NULL, AV_LOG_ERROR, "Usage: %s <input file> <output file>\n",
@@ -434,90 +497,22 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  if ((ret = open_input_file(argv[1], &handler)) < 0)
-    goto end;
+  if ((ret = init_handler(argv[1], argv[2], &handler)) < 0)
+    return ret;
 
-  if ((ret = open_output_file(argv[2], &handler)) < 0)
-    goto end;
-
-  if ((ret = init_filter(&handler)) < 0)
-    goto end;
-
-  if (!(packet = av_packet_alloc()))
-    goto end;
-
-  StreamContext *stream = handler.stream_ctx;
-
-  /* read all packets */
-  while (1) {
-    if ((ret = av_read_frame(handler.ifmt_ctx, packet)) < 0)
+  do {
+    ret = process_frame(handler);
+    if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
       break;
-    stream_index = packet->stream_index;
-    av_log(NULL, AV_LOG_DEBUG, "Demuxer gave frame of stream_index %u\n",
-           stream_index);
 
-    if (handler.stream_idx != stream_index)
-      continue;
-
-    av_log(NULL, AV_LOG_DEBUG, "Going to reencode&filter the frame\n");
-
-    ret = avcodec_send_packet(stream->dec_ctx, packet);
-    if (ret < 0) {
-      av_log(NULL, AV_LOG_ERROR, "Decoding failed\n");
-      break;
-    }
-
-    while (ret >= 0) {
-      ret = avcodec_receive_frame(stream->dec_ctx, stream->dec_frame);
-      if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
-        break;
-      else if (ret < 0)
-        goto end;
-
-      stream->dec_frame->pts = stream->dec_frame->best_effort_timestamp;
-      ret = filter_encode_write_frame(stream->dec_frame, &handler);
-      if (ret < 0)
-        goto end;
-    }
-  }
-
-  /* flush decoder */
-  ret = avcodec_send_packet(stream->dec_ctx, NULL);
-  if (ret < 0) {
-    av_log(NULL, AV_LOG_ERROR, "Flushing decoding failed\n");
-    goto end;
-  }
-
-  while (ret >= 0) {
-    ret = avcodec_receive_frame(stream->dec_ctx, stream->dec_frame);
-    if (ret == AVERROR_EOF)
-      break;
-    else if (ret < 0)
-      goto end;
-
-    stream->dec_frame->pts = stream->dec_frame->best_effort_timestamp;
-    ret = filter_encode_write_frame(stream->dec_frame, &handler);
     if (ret < 0)
       goto end;
-  }
+  } while (1);
 
-  /* flush filter */
-  ret = filter_encode_write_frame(NULL, &handler);
-  if (ret < 0) {
-    av_log(NULL, AV_LOG_ERROR, "Flushing filter failed\n");
-    goto end;
-  }
+  ret = flush(handler);
 
-  /* flush encoder */
-  ret = flush_encoder(&handler);
-  if (ret < 0) {
-    av_log(NULL, AV_LOG_ERROR, "Flushing encoder failed\n");
-    goto end;
-  }
-
-  av_write_trailer(handler.ofmt_ctx);
 end:
-  close_handler(&handler);
+  close_handler(handler);
 
   if (ret < 0)
     av_log(NULL, AV_LOG_ERROR, "Error occurred: %s\n", av_err2str(ret));

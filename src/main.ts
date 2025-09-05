@@ -2,7 +2,7 @@ import { DataType, open, define } from "ffi-rs";
 
 open({
   library: "deslib",
-  path: "/Users/romain/sources/descript/descript/services/media-transformation-server/src/ffmpeg/libdeslib.dylib",
+  path: "/Users/romain/sources/test-ffmpeg-transcode-lib/src/libdeslib.dylib",
 });
 
 const lib = define({
@@ -25,21 +25,37 @@ const lib = define({
     library: "deslib",
     retType: DataType.External,
     paramsType: [DataType.String, DataType.String],
+    runInNewThread: true,
+  },
+  seek: {
+    library: "deslib",
+    retType: DataType.I32,
+    paramsType: [DataType.External, DataType.Double],
+    runInNewThread: true,
+  },
+  last_position: {
+    library: "deslib",
+    retType: DataType.Double,
+    paramsType: [DataType.External],
+    runInNewThread: true,
   },
   process_frame: {
     library: "deslib",
     retType: DataType.I32,
     paramsType: [DataType.External],
+    runInNewThread: true,
   },
   flush: {
     library: "deslib",
     retType: DataType.I32,
     paramsType: [DataType.External],
+    runInNewThread: true,
   },
   close_handler: {
     library: "deslib",
     retType: DataType.Void,
     paramsType: [DataType.External],
+    runInNewThread: true,
   },
 });
 
@@ -55,34 +71,41 @@ const strerr = (err: number) => {
 
 const init_handler = (input: string, output: string) =>
   lib.init_handler([input, output]);
+
+const seek = (handler: unknown, position: number) =>
+  lib.seek([handler, position]);
+
+const last_position = (handler: unknown) => lib.last_position([handler]);
+
 const process_frame = (handler: unknown) => lib.process_frame([handler]);
+
 const flush = (handler: unknown) => lib.flush([handler]);
+
 const close_handler = (handler: unknown) => lib.close_handler([handler]);
 
-export const process = (input: string, output: string): Promise<void> =>
-  new Promise((resolve, reject) => {
-    try {
-      const handler = init_handler(input, output);
+export const process = async (
+  input: string,
+  output: string,
+  from: number,
+  to: number,
+) => {
+  const handler = await init_handler(input, output);
 
-      try {
-        do {
-          const ret = process_frame(handler);
-          if (ret === eof || ret === eagain) break;
+  const ret = await seek(handler, from);
+  if (ret < 0) console.error(`Error while seeking: ${strerr(ret)}`);
 
-          if (ret < 0) throw new Error(`Error: ${strerr(ret)}`);
-        } while (true);
+  try {
+    do {
+      if (to <= (await last_position(handler))) break;
 
-        flush(handler);
-        resolve();
-      } finally {
-        close_handler(handler);
-      }
-    } catch (e) {
-      reject(e);
-    }
-  });
+      const ret = await process_frame(handler);
+      if (ret === eof || ret === eagain) break;
 
-process(
-  "https://descript-app-dev-00-assets-us-east4.storage.googleapis.com/110d2d05-3a54-4707-b89d-04059320d9dc/0c25564e-b2da-4dae-96e7-00e62bd6c256.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=GOOG1E7RFWJK23CHPD6QLRRRQMGEPG67GQZKJ2ZIBFXDLR3XCVKDDV5DODGYF%2F20250905%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20250905T140438Z&X-Amz-Expires=259200&X-Amz-Signature=1210f1707af581beee74c6bb55396faafa25cd297ad4af40f1396e30bb1e08bb&X-Amz-SignedHeaders=host&response-cache-control=private%2C%20max-age%3D259200",
-  "/tmp/ert.mp4",
-);
+      if (ret < 0) throw new Error(`Error: ${strerr(ret)}`);
+    } while (true);
+
+    await flush(handler);
+  } finally {
+    await close_handler(handler);
+  }
+};

@@ -1,19 +1,11 @@
-import { load, DataType, open, close, define } from "ffi-rs";
+import { DataType, open, define } from "ffi-rs";
 
 open({
   library: "deslib",
-  path: "./libdeslib.dylib",
+  path: "/Users/romain/sources/descript/descript/services/media-transformation-server/src/ffmpeg/libdeslib.dylib",
 });
 
-const {
-  get_eof,
-  get_eagain,
-  get_strerror,
-  init_handler,
-  process_frame,
-  flush,
-  close_handler,
-} = define({
+const lib = define({
   get_eof: {
     library: "deslib",
     retType: DataType.I32,
@@ -51,31 +43,46 @@ const {
   },
 });
 
-const eof = get_eof([]);
-const eagain = get_eagain([]);
+const eof = lib.get_eof([]);
+const eagain = lib.get_eagain([]);
 
 const strerr = (err: number) => {
   const str = Buffer.alloc(1024);
-  const ret = get_strerror([err, str, 1024]);
+  const ret = lib.get_strerror([err, str, 1024]);
   if (ret < 0) throw new Error(`Invalid error: ${err}`);
   return str.slice(0, ret).toString();
 };
 
-const run = (input: string, output: string) => {
-  const handler = init_handler([input, output]);
+const init_handler = (input: string, output: string) =>
+  lib.init_handler([input, output]);
+const process_frame = (handler: unknown) => lib.process_frame([handler]);
+const flush = (handler: unknown) => lib.flush([handler]);
+const close_handler = (handler: unknown) => lib.close_handler([handler]);
 
-  try {
-    do {
-      const ret = process_frame([handler]);
-      if (ret === eof || ret === eagain) break;
+export const process = (input: string, output: string): Promise<void> =>
+  new Promise((resolve, reject) => {
+    try {
+      const handler = init_handler(input, output);
 
-      if (ret < 0) throw new Error(`Error: ${strerr(ret)}`);
-    } while (true);
+      try {
+        do {
+          const ret = process_frame(handler);
+          if (ret === eof || ret === eagain) break;
 
-    flush([handler]);
-  } finally {
-    close_handler([handler]);
-  }
-};
+          if (ret < 0) throw new Error(`Error: ${strerr(ret)}`);
+        } while (true);
 
-run("/tmp/bla.mp4", "/tmp/blo.mp4");
+        flush(handler);
+        resolve();
+      } finally {
+        close_handler(handler);
+      }
+    } catch (e) {
+      reject(e);
+    }
+  });
+
+process(
+  "https://descript-app-dev-00-assets-us-east4.storage.googleapis.com/110d2d05-3a54-4707-b89d-04059320d9dc/0c25564e-b2da-4dae-96e7-00e62bd6c256.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=GOOG1E7RFWJK23CHPD6QLRRRQMGEPG67GQZKJ2ZIBFXDLR3XCVKDDV5DODGYF%2F20250905%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20250905T140438Z&X-Amz-Expires=259200&X-Amz-Signature=1210f1707af581beee74c6bb55396faafa25cd297ad4af40f1396e30bb1e08bb&X-Amz-SignedHeaders=host&response-cache-control=private%2C%20max-age%3D259200",
+  "/tmp/ert.mp4",
+);

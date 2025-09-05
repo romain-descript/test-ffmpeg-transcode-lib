@@ -8,6 +8,7 @@ int main(int argc, char **argv) {
   char strerr[STRERR_LEN];
   int eof = get_eof();
   int eagain = get_eagain();
+  double last_pos;
 
   if (argc != 3) {
     av_log(NULL, AV_LOG_ERROR, "Usage: %s <input file> <output file>\n",
@@ -22,7 +23,19 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  ret = seek(handler, 2.);
+  if (ret < 0) {
+    ret = get_strerror(ret, strerr, STRERR_LEN);
+    if (ret == 0)
+      av_log(NULL, AV_LOG_ERROR, "Seek failed: %s\n", strerr);
+  }
+
   do {
+    last_pos = last_position(handler);
+
+    if (4. <= last_pos)
+      break;
+
     ret = process_frame(handler);
     if (ret == eof || ret == eagain)
       break;
@@ -38,7 +51,7 @@ end:
 
   if (ret < 0) {
     ret = get_strerror(ret, strerr, STRERR_LEN);
-    if (ret < 0)
+    if (ret == 0)
       av_log(NULL, AV_LOG_ERROR, "Error occurred: %s\n", strerr);
   }
 

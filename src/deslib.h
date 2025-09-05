@@ -29,6 +29,7 @@ typedef struct handler {
   StreamContext *stream_ctx;
   int stream_idx;
   AVPacket *packet;
+  double last_position;
 } handler_t;
 
 int get_eof();
@@ -36,6 +37,8 @@ int get_eagain();
 int get_strerror(int err, char *buf, size_t buflen);
 
 handler_t *init_handler(const char *input, const char *output);
+int seek(handler_t *handler, double pos);
+double last_position(handler_t *handler);
 int process_frame(handler_t *handler);
 int flush(handler_t *handler);
 void close_handler(handler_t *handler);

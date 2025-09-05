@@ -449,6 +449,14 @@ int process_frame(handler_t *handler) {
     stream_index = handler->packet->stream_index;
   }
 
+  if (handler->packet->pts != AV_NOPTS_VALUE)
+    handler->last_position =
+        ((double)av_rescale_q(
+            handler->packet->pts,
+            handler->ifmt_ctx->streams[handler->stream_idx]->time_base,
+            AV_TIME_BASE_Q)) /
+        AV_TIME_BASE;
+
   ret = avcodec_send_packet(handler->stream_ctx->dec_ctx, handler->packet);
   if (ret < 0)
     return ret;
@@ -505,37 +513,16 @@ int flush(handler_t *handler) {
   return av_write_trailer(handler->ofmt_ctx);
 }
 
-/*
-int main(int argc, char **argv) {
+double last_position(handler_t *handler) { return handler->last_position; }
+
+int seek(handler_t *handler, double pos) {
   int ret;
-  handler_t *handler;
+  AVStream *stream = handler->ifmt_ctx->streams[handler->stream_idx];
+  int64_t seek_timestamp = pos * AV_TIME_BASE;
 
-  if (argc != 3) {
-    av_log(NULL, AV_LOG_ERROR, "Usage: %s <input file> <output file>\n",
-           argv[0]);
-    return 1;
-  }
+  if (handler->ifmt_ctx->start_time != AV_NOPTS_VALUE)
+    seek_timestamp += handler->ifmt_ctx->start_time;
 
-  if ((ret = init_handler(argv[1], argv[2], &handler)) < 0)
-    return ret;
-
-  do {
-    ret = process_frame(handler);
-    if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
-      break;
-
-    if (ret < 0)
-      goto end;
-  } while (1);
-
-  ret = flush(handler);
-
-end:
-  close_handler(handler);
-
-  if (ret < 0)
-    av_log(NULL, AV_LOG_ERROR, "Error occurred: %s\n", av_err2str(ret));
-
-  return ret ? 1 : 0;
+  return avformat_seek_file(handler->ifmt_ctx, -1, INT64_MIN, seek_timestamp,
+                            INT64_MIN, 0);
 }
-*/

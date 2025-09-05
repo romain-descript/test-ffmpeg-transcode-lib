@@ -82,10 +82,10 @@ export const process = async ({
 }) => {
   const handler = await init_handler({ input, output, stop: to });
 
-  const ret = await seek(handler, from);
-  if (ret < 0) console.error(`Error while seeking: ${strerr(ret)}`);
-
   try {
+    const ret = await seek(handler, from);
+    if (ret < 0) console.error(`Error while seeking: ${strerr(ret)}`);
+
     await process_frames(handler);
     await flush(handler);
   } finally {

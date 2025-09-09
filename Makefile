@@ -4,9 +4,13 @@ default: all
 OBJECTS  = $(patsubst src/%.c, dist/src/%.o, $(shell echo src/*.c))
 EXAMPLES = $(patsubst examples/%.c, dist/examples/%, $(shell echo examples/*.c))
 CC       = gcc
-CFLAGS   = -g -fPIC
-FFLIBS   = -lavformat -lavcodec -lavutil -lavfilter
-LDFLAGS  = $(FFLIBS)
+
+# Use pkg-config to find FFmpeg include and library paths
+FFMPEG_CFLAGS = $(shell pkg-config --cflags libavformat libavcodec libavutil libavfilter)
+FFMPEG_LIBS   = $(shell pkg-config --libs libavformat libavcodec libavutil libavfilter)
+
+CFLAGS   = -g -fPIC $(FFMPEG_CFLAGS)
+LDFLAGS  = $(FFMPEG_LIBS)
 
 ifeq ($(shell uname -s),Linux)
     DYNLIB_EXT = .so

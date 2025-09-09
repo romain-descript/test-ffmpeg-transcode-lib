@@ -1,13 +1,4 @@
-import {
-  DataType,
-  JsExternal,
-  PointerType,
-  open,
-  define,
-  createPointer,
-  freePointer,
-  unwrapPointer,
-} from "ffi-rs";
+import { DataType, JsExternal, open, define } from "ffi-rs";
 
 const paramsType = {
   input: DataType.String,

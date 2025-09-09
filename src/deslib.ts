@@ -13,16 +13,23 @@ const paramsType = {
   isVideo: DataType.Boolean,
 };
 
-export type Params = {
+type BaseParams = {
   input: string;
   output: string;
   filters: string;
   format: string;
   encoder: string;
   encoderParams: string;
-  pixelFormat: string;
-  isVideo: boolean;
 };
+
+export type Params = BaseParams &
+  (
+    | {
+        type: "video";
+        pixelFormat: string;
+      }
+    | { type: "audio" }
+  );
 
 const sharedLibExt = os.platform() === "darwin" ? ".dylib" : ".so";
 
@@ -83,7 +90,17 @@ export const strerr = (err: number) => {
 export const init_handler = async (params: Params) => {
   const handler = lib.alloc_handler([]);
 
-  const ret = await lib.init_handler([params, handler]);
+  let { type, ...effectiveParams } = params;
+
+  const ret = await lib.init_handler([
+    {
+      isVideo: type == "video",
+      // ffi-rs requires it all the time.
+      ...(type == "audio" ? { pixelFormat: "dummy" } : {}),
+      ...effectiveParams,
+    },
+    handler,
+  ]);
 
   if (ret < 0) {
     lib.close_handler([handler]);

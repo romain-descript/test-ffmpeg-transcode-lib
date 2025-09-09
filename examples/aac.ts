@@ -23,14 +23,11 @@ export const process = async (params: Params) => {
 };
 
 process({
-  type: "video",
+  type: "audio",
   input: "/tmp/bla.mp4",
   output: "/tmp/blo.mp4",
-  filters:
-    "scale=w=780:h=-1:force_original_aspect_ratio=decrease:force_divisible_by=2,dblur",
+  filters: "aphaser",
   format: "mp4",
-  pixelFormat: "yuv420p",
-  encoder: "libx264",
-  encoderParams:
-    "x264-params keyint=25:min-keyint=25:scenecut=-1,preset ultrafast",
+  encoder: "aac",
+  encoderParams: "b 64k",
 });

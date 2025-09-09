@@ -1,8 +1,8 @@
 .PHONY : clean all
 default: all
 
-OBJECTS  = $(patsubst src/%.c, dist/%.o, $(shell echo src/*.c))
-EXAMPLES = $(patsubst examples/%.c, dist/%.exe, $(shell echo examples/*.c))
+OBJECTS  = $(patsubst src/%.c, dist/src/%.o, $(shell echo src/*.c))
+EXAMPLES = $(patsubst examples/%.c, dist/examples/%, $(shell echo examples/*.c))
 CC       = gcc
 CFLAGS   = -g -fPIC
 FFLIBS   = -lavformat -lavcodec -lavutil -lavfilter
@@ -14,19 +14,22 @@ else
     DYNLIB_EXT = .dylib
 endif
 
-dist/libdeslib$(DYNLIB_EXT): $(OBJECTS)
+dist/src/libdeslib$(DYNLIB_EXT): $(OBJECTS) dist/src
 	$(CC) -o $@ -shared $(LDFLAGS) $<
 
-dist:
-	mkdir -p dist
+dist/src:
+	mkdir -p dist/src
 
-dist/%.o: src/%.c dist
+dist/examples:
+	mkdir -p dist/examples
+
+dist/src/%.o: src/%.c dist/src
 	$(CC) $(CFLAGS) -c $< -o $@
 
-dist/%.exe: examples/%.c dist/libdeslib$(DYNLIB_EXT)
-	$(CC) -L./dist -I./src -ldeslib $(LDFLAGS) -o $@ $<
+dist/examples/%: examples/%.c dist/src/libdeslib$(DYNLIB_EXT) dist/examples
+	$(CC) -L./dist/src -I./src -ldeslib $(LDFLAGS) -o $@ $<
 
-all: $(EXAMPLES) dist/libdeslib$(DYNLIB_EXT)
+all: dist/src/libdeslib$(DYNLIB_EXT) $(EXAMPLES)
 
 clean:
 	rm -rf dist/

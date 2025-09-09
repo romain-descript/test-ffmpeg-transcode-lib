@@ -5,6 +5,7 @@
   "main": "src/main.ts",
   "scripts": {
     "build": "make && tsc",
+    "clean": "make clean",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],

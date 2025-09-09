@@ -35,7 +35,7 @@ const sharedLibExt = os.platform() === "darwin" ? ".dylib" : ".so";
 
 openLib({
   library: "deslib",
-  path: path.resolve(__dirname, `../libdeslib${sharedLibExt}`),
+  path: path.resolve(__dirname, `libdeslib${sharedLibExt}`),
 });
 
 const lib = define({

@@ -1,8 +1,2 @@
-deslib
-deslib.dSYM
-*.o
-*.so
-*.dylib
-main
-node_modules/
 dist/
+node_modules/

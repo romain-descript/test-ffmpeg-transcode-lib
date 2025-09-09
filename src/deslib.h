@@ -1,36 +1,21 @@
-#include <libavcodec/avcodec.h>
-#include <libavfilter/buffersink.h>
-#include <libavfilter/buffersrc.h>
-#include <libavformat/avformat.h>
-#include <libavutil/mem.h>
-#include <libavutil/opt.h>
-#include <libavutil/pixdesc.h>
+#include <stddef.h>
 
-typedef struct handler {
-  AVFormatContext *ifmt_ctx;
-  AVFormatContext *ofmt_ctx;
+typedef struct handler handler_t;
 
-  AVFilterContext *buffersink_ctx;
-  AVFilterContext *buffersrc_ctx;
-  AVFilterGraph *filter_graph;
-
-  AVPacket *enc_pkt;
-  AVFrame *filtered_frame;
-
-  AVCodecContext *dec_ctx;
-  AVCodecContext *enc_ctx;
-
-  AVFrame *dec_frame;
-
-  int stream_idx;
-  AVPacket *packet;
-  int64_t last_position;
-  int64_t stop;
-} handler_t;
+typedef struct handler_params {
+  const char *input;
+  const char *output;
+  const char *filters;
+  const char *format;
+  const char *encoder;
+  const char *encoder_params;
+  const char *pixel_format;
+  const int is_video;
+} handler_params_t;
 
 int get_strerror(int err, char *buf, size_t buflen);
 
-handler_t *init_handler(const char *input, const char *output, double stop);
+int init_handler(const handler_params_t *params, handler_t **handler);
 int seek(handler_t *handler, double pos);
 int process_frames(handler_t *handler);
 int flush(handler_t *handler);

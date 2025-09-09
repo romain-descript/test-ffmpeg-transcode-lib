@@ -79,8 +79,10 @@ static int open_input_file(const handler_params_t *params, handler_t *handler) {
   }
 
   ret = av_find_best_stream(handler->ifmt_ctx, stream_type, -1, -1, NULL, 0);
-  if (ret < 0)
+  if (ret < 0) {
+    av_log(NULL, AV_LOG_ERROR, "Cannot find stream type!\n");
     return ret;
+  }
 
   handler->stream_idx = ret;
 
@@ -228,6 +230,10 @@ static int open_output_file(const handler_params_t *params,
 
   out_stream->time_base = handler->enc_ctx->time_base;
 
+  if (handler->enc_ctx->frame_size > 0)
+    av_buffersink_set_frame_size(handler->buffersink_ctx,
+                                 handler->enc_ctx->frame_size);
+
   av_dump_format(handler->ofmt_ctx, 0, params->output, 1);
 
   if (!(handler->ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {
@@ -328,6 +334,14 @@ static int init_filter(const handler_params_t *params, handler_t *handler) {
       av_log(NULL, AV_LOG_ERROR, "Cannot set output pixel format\n");
       goto end;
     }
+  } else {
+    ret = av_opt_set_bin(
+        buffersink_ctx, "sample_fmts", (uint8_t *)&handler->dec_ctx->sample_fmt,
+        sizeof(handler->dec_ctx->sample_fmt), AV_OPT_SEARCH_CHILDREN);
+    if (ret < 0) {
+      av_log(NULL, AV_LOG_ERROR, "Cannot set output sample format\n");
+      goto end;
+    }
   }
 
   ret = avfilter_init_dict(buffersink_ctx, NULL);
@@ -379,7 +393,8 @@ static int init_filter(const handler_params_t *params, handler_t *handler) {
   if (params->is_video) {
     handler->width = handler->buffersink_ctx->inputs[0]->w;
     handler->height = handler->buffersink_ctx->inputs[0]->h;
-    handler->sample_aspect_ratio = handler->buffersink_ctx->inputs[0]->sample_aspect_ratio;
+    handler->sample_aspect_ratio =
+        handler->buffersink_ctx->inputs[0]->sample_aspect_ratio;
   } else {
     handler->sample_rate = handler->buffersink_ctx->inputs[0]->sample_rate;
     ret = av_channel_layout_copy(
@@ -595,5 +610,5 @@ int seek(handler_t *handler, double pos) {
   int64_t seek_timestamp = pos * AV_TIME_BASE;
 
   return avformat_seek_file(handler->ifmt_ctx, -1, -INT64_MAX, seek_timestamp,
-                            INT64_MAX, 0);
+                            seek_timestamp, 0);
 }

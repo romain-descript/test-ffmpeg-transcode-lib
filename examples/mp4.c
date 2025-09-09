@@ -1,4 +1,6 @@
 #include "deslib.h"
+
+#include <assert.h>
 #include <libavutil/avutil.h>
 
 #define STRERR_LEN 1024
@@ -17,27 +19,29 @@ int main(int argc, char **argv) {
   const handler_params_t params = {
       .input = argv[1],
       .output = argv[2],
-      .filters = "dblur",
+      .filters = "scale=w=780:h=-1:force_original_aspect_ratio=decrease:force_"
+                 "divisible_by=2,dblur",
       .format = "mp4",
       .pixel_format = "yuv420p",
       .encoder = "libx264",
-      .encoder_params = "x264-params keyint=25:min-keyint=25:scenecut=-1,preset ultrafast",
+      .encoder_params =
+          "x264-params keyint=25:min-keyint=25:scenecut=-1,preset ultrafast",
       .is_video = 1};
 
   ret = init_handler(&params, &handler);
 
   if (ret < 0) {
     ret = get_strerror(ret, strerr, STRERR_LEN);
-    if (ret == 0)
-      av_log(NULL, AV_LOG_ERROR, "Cound not initialize handler: %s\n", strerr);
+    assert(0 < ret);
+    av_log(NULL, AV_LOG_ERROR, "Cound not initialize handler: %s\n", strerr);
     return 1;
   }
 
   ret = seek(handler, 2.2);
   if (ret < 0) {
     ret = get_strerror(ret, strerr, STRERR_LEN);
-    if (ret == 0)
-      av_log(NULL, AV_LOG_ERROR, "Seek failed: %s\n", strerr);
+    assert(0 < ret);
+    av_log(NULL, AV_LOG_ERROR, "Seek failed: %s\n", strerr);
   }
 
   ret = process_frames(handler);
@@ -51,8 +55,8 @@ end:
 
   if (ret < 0) {
     ret = get_strerror(ret, strerr, STRERR_LEN);
-    if (ret == 0)
-      av_log(NULL, AV_LOG_ERROR, "Error occurred: %s\n", strerr);
+    assert(0 < ret);
+    av_log(NULL, AV_LOG_ERROR, "Error occurred: %s\n", strerr);
   }
 
   return ret ? 1 : 0;

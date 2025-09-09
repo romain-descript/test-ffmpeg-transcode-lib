@@ -1,17 +1,32 @@
-OS_NAME := $(shell uname -s)
+.PHONY : clean all
+default: all
 
-ifeq ($(OS_NAME),Linux)
-    DYNLIB_EXT := .so
+OBJECTS  = $(patsubst src/%.c, dist/%.o, $(shell echo src/*.c))
+EXAMPLES = $(patsubst examples/%.c, dist/%.exe, $(shell echo examples/*.c))
+CC       = gcc
+CFLAGS   = -g -fPIC
+FFLIBS   = -lavformat -lavcodec -lavutil -lavfilter
+LDFLAGS  = $(FFLIBS)
+
+ifeq ($(shell uname -s),Linux)
+    DYNLIB_EXT = .so
 else
-    DYNLIB_EXT := .dylib
+    DYNLIB_EXT = .dylib
 endif
 
-all:
-	mkdir -p dist/
-	gcc -g -fPIC -I. -c ./src/deslib.c -o ./dist/deslib.o
-	gcc -shared -o dist/libdeslib$(DYNLIB_EXT) -lavformat -lavcodec -lavutil -lavfilter ./dist/deslib.o
-	gcc -L./dist -I./src -ldeslib -lavformat -lavcodec -lavutil -lavfilter -o dist/mp4 ./examples/mp4.c
-	gcc -L./dist -I./src -ldeslib -lavformat -lavcodec -lavutil -lavfilter -o dist/aac ./examples/aac.c
+dist/libdeslib$(DYNLIB_EXT): $(OBJECTS)
+	$(CC) -o $@ -shared $(LDFLAGS) $<
+
+dist:
+	mkdir -p dist
+
+dist/%.o: src/%.c dist
+	$(CC) $(CFLAGS) -c $< -o $@
+
+dist/%.exe: examples/%.c dist/libdeslib$(DYNLIB_EXT)
+	$(CC) -L./dist -I./src -ldeslib $(LDFLAGS) -o $@ $<
+
+all: $(EXAMPLES) dist/libdeslib$(DYNLIB_EXT)
 
 clean:
 	rm -rf dist/

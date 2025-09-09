@@ -15,7 +15,11 @@ typedef struct handler_params {
 
 int get_strerror(int err, char *buf, size_t buflen);
 
-int init_handler(const handler_params_t *params, handler_t **handler);
+handler_t *alloc_handler();
+
+// You need to call `close_handler` if this returns an error!
+int init_handler(const handler_params_t *params, handler_t *handler);
+
 int seek(handler_t *handler, double pos);
 int process_frames(handler_t *handler);
 int flush(handler_t *handler);

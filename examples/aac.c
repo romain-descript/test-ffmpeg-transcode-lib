@@ -24,14 +24,15 @@ int main(int argc, char **argv) {
                                    .encoder_params = "b 64k",
                                    .is_video = 0};
 
-  ret = init_handler(&params, &handler);
-
-  if (ret < 0) {
-    ret = get_strerror(ret, strerr, STRERR_LEN);
-    assert(0 < ret);
-    av_log(NULL, AV_LOG_ERROR, "Cound not initialize handler: %s\n", strerr);
+  handler = alloc_handler();
+  if (!handler) {
+    av_log(NULL, AV_LOG_ERROR, "Error allocating handler!\n");
     return 1;
   }
+
+  ret = init_handler(&params, handler);
+  if (ret < 0)
+    goto end;
 
   ret = seek(handler, 2.2);
   if (ret < 0) {

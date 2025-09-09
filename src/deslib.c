@@ -490,42 +490,30 @@ int flush_encoder(handler_t *handler) {
   return encode_write_frame(1, handler);
 }
 
-int init_handler(const handler_params_t *params, handler_t **handler_ptr) {
+handler_t *alloc_handler() { return av_mallocz(sizeof(handler_t)); }
+
+int init_handler(const handler_params_t *params, handler_t *handler) {
   int ret;
-
-  *handler_ptr = av_mallocz(sizeof(handler_t));
-  if (!*handler_ptr)
-    return AVERROR(ENOMEM);
-
-  handler_t *handler = *handler_ptr;
 
   if (params->is_video) {
     handler->pix_fmt = av_get_pix_fmt(params->pixel_format);
-    if (handler->pix_fmt == AV_PIX_FMT_NONE) {
-      ret = AVERROR(EINVAL);
-      goto end;
-    }
+    if (handler->pix_fmt == AV_PIX_FMT_NONE)
+      return ret;
   }
 
   if ((ret = open_input_file(params, handler)) < 0)
-    goto end;
+    return ret;
 
   if ((ret = init_filter(params, handler)) < 0)
-    goto end;
+    return ret;
 
   if ((ret = open_output_file(params, handler)) < 0)
-    goto end;
+    return ret;
 
-  if (!(handler->packet = av_packet_alloc())) {
-    ret = AVERROR(ENOMEM);
-    goto end;
-  }
+  if (!(handler->packet = av_packet_alloc()))
+    return AVERROR(ENOMEM);
 
   return 0;
-
-end:
-  close_handler(handler);
-  return ret;
 }
 
 static int process_frame(handler_t *handler) {

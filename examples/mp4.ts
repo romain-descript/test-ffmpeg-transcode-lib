@@ -1,28 +1,28 @@
 import {
   Params,
-  init_handler,
+  open,
   seek,
-  process_frames,
+  process,
   flush,
-  close_handler,
+  close,
   strerr,
 } from "../src/deslib";
 
-export const process = async (params: Params) => {
-  const handler = await init_handler(params);
+export const exec = async (params: Params) => {
+  const handler = await open(params);
 
   try {
     const ret = await seek(handler, 2.2);
     if (ret < 0) console.error(`Error while seeking: ${strerr(ret)}`);
 
-    await process_frames(handler);
+    await process(handler);
     await flush(handler);
   } finally {
-    await close_handler(handler);
+    await close(handler);
   }
 };
 
-process({
+exec({
   type: "video",
   input: "/tmp/bla.mp4",
   output: "/tmp/blo.mp4",

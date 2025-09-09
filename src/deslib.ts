@@ -1,4 +1,4 @@
-import { DataType, JsExternal, open, define } from "ffi-rs";
+import { DataType, JsExternal, open as openLib, define } from "ffi-rs";
 import path from "node:path";
 import os from "node:os";
 
@@ -33,7 +33,7 @@ export type Params = BaseParams &
 
 const sharedLibExt = os.platform() === "darwin" ? ".dylib" : ".so";
 
-open({
+openLib({
   library: "deslib",
   path: path.resolve(__dirname, `../libdeslib${sharedLibExt}`),
 });
@@ -87,7 +87,7 @@ export const strerr = (err: number) => {
   return str.slice(0, ret).toString();
 };
 
-export const init_handler = async (params: Params) => {
+export const open = async (params: Params) => {
   const handler = lib.alloc_handler([]);
 
   let { type, ...effectiveParams } = params;
@@ -113,10 +113,8 @@ export const init_handler = async (params: Params) => {
 export const seek = (handler: JsExternal, position: number) =>
   lib.seek([handler, position]);
 
-export const process_frames = (handler: JsExternal) =>
-  lib.process_frames([handler]);
+export const process = (handler: JsExternal) => lib.process_frames([handler]);
 
 export const flush = (handler: JsExternal) => lib.flush([handler]);
 
-export const close_handler = (handler: JsExternal) =>
-  lib.close_handler([handler]);
+export const close = (handler: JsExternal) => lib.close_handler([handler]);

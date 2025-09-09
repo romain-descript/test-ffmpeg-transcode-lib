@@ -1,4 +1,6 @@
 import { DataType, JsExternal, open, define } from "ffi-rs";
+import path from "node:path";
+import os from "node:os";
 
 const paramsType = {
   input: DataType.String,
@@ -22,9 +24,11 @@ export type Params = {
   isVideo: boolean;
 };
 
+const sharedLibExt = os.platform() === "darwin" ? ".dylib" : ".so";
+
 open({
   library: "deslib",
-  path: "/Users/romain/sources/test-ffmpeg-transcode-lib/dist/libdeslib.dylib",
+  path: path.resolve(__dirname, `../libdeslib${sharedLibExt}`),
 });
 
 const lib = define({

@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/main.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "make && tsc",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],

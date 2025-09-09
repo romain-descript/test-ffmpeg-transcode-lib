@@ -350,7 +350,6 @@ static int init_filter(const handler_params_t *params, handler_t *handler) {
     goto end;
   }
 
-  /* Endpoints for the filter graph. */
   outputs->name = av_strdup("in");
   outputs->filter_ctx = buffersrc_ctx;
   outputs->pad_idx = 0;
@@ -373,7 +372,6 @@ static int init_filter(const handler_params_t *params, handler_t *handler) {
   if ((ret = avfilter_graph_config(filter_graph, NULL)) < 0)
     goto end;
 
-  /* Fill FilteringContext */
   handler->buffersrc_ctx = buffersrc_ctx;
   handler->buffersink_ctx = buffersink_ctx;
   handler->filter_graph = filter_graph;
@@ -415,7 +413,6 @@ static int encode_write_frame(int flush, handler_t *handler) {
   AVPacket *enc_pkt = handler->enc_pkt;
   int ret;
 
-  /* encode filtered frame */
   av_packet_unref(enc_pkt);
 
   if (filt_frame && filt_frame->pts != AV_NOPTS_VALUE)
@@ -433,14 +430,12 @@ static int encode_write_frame(int flush, handler_t *handler) {
     if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
       return 0;
 
-    /* prepare packet for muxing */
     enc_pkt->stream_index = handler->stream_idx;
     av_packet_rescale_ts(
         enc_pkt, handler->enc_ctx->time_base,
         handler->ofmt_ctx->streams[handler->stream_idx]->time_base);
 
     av_log(NULL, AV_LOG_DEBUG, "Muxing frame\n");
-    /* mux encoded frame */
     ret = av_interleaved_write_frame(handler->ofmt_ctx, enc_pkt);
   }
 

@@ -1,8 +1,9 @@
 {
-  "name": "test-ffmpeg-transcode-lib",
+  "name": "mts-ffmpeg-wrapper",
   "version": "1.0.0",
   "description": "",
-  "main": "src/main.ts",
+  "main": "dist/mts-ffmpeg-wrapper.js",
+  "types": "src/mts-ffmpeg-wrapper.ts",
   "scripts": {
     "build": "make && tsc",
     "clean": "make clean",

@@ -13,68 +13,70 @@ const paramsType = {
   isVideo: DataType.Boolean,
 };
 
-type BaseParams = {
+interface BaseParams {
   input: string;
   output: string;
   filters: string;
   format: string;
   encoder: string;
   encoderParams: string;
-};
+}
 
-export type Params = BaseParams &
-  (
-    | {
-        type: "video";
-        pixelFormat: string;
-      }
-    | { type: "audio" }
-  );
+interface AudioParams extends BaseParams {
+  type: "audio";
+}
+
+interface VideoParams extends BaseParams {
+  type: "video";
+  pixelFormat: string;
+}
+
+export type Params = AudioParams | VideoParams;
 
 const sharedLibExt = os.platform() === "darwin" ? ".dylib" : ".so";
 
 openLib({
-  library: "deslib",
-  path: path.resolve(__dirname, `libdeslib${sharedLibExt}`),
+  library: "mts-ffmpeg-wrapper",
+  path: path.resolve(__dirname, `libmts-ffmpeg-wrapper${sharedLibExt}`),
 });
 
 const lib = define({
   get_strerror: {
-    library: "deslib",
+    library: "mts-ffmpeg-wrapper",
     retType: DataType.I32,
     paramsType: [DataType.I32, DataType.U8Array, DataType.I32],
   },
   alloc_handler: {
-    library: "deslib",
+    library: "mts-ffmpeg-wrapper",
     retType: DataType.External,
     paramsType: [],
   },
   init_handler: {
-    library: "deslib",
+    library: "mts-ffmpeg-wrapper",
     retType: DataType.I32,
     paramsType: [paramsType, DataType.External],
     runInNewThread: true,
   },
   seek: {
-    library: "deslib",
+    library: "mts-ffmpeg-wrapper",
     retType: DataType.I32,
     paramsType: [DataType.External, DataType.Double],
     runInNewThread: true,
   },
   process_frames: {
-    library: "deslib",
+    library: "mts-ffmpeg-wrapper",
     retType: DataType.I32,
     paramsType: [DataType.External],
     runInNewThread: true,
   },
   flush: {
-    library: "deslib",
+    library: "mts-ffmpeg-wrapper",
     retType: DataType.I32,
     paramsType: [DataType.External],
     runInNewThread: true,
   },
   close_handler: {
-    library: "deslib",
+    library: "mts-ffmpeg-wrapper",
     retType: DataType.Void,
     paramsType: [DataType.External],
   },

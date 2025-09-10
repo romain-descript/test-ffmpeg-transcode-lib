@@ -6,7 +6,7 @@ import {
   flush,
   close,
   strerr,
-} from "../src/deslib";
+} from "../src/mts-ffmpeg-wrapper";
 
 export const exec = async (params: Params) => {
   const handler = await open(params);

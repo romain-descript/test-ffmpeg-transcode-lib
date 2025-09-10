@@ -18,7 +18,7 @@ else
     DYNLIB_EXT = .dylib
 endif
 
-dist/src/libdeslib$(DYNLIB_EXT): $(OBJECTS) dist/src
+dist/src/libmts-ffmpeg-wrapper$(DYNLIB_EXT): $(OBJECTS) dist/src
 	$(CC) -o $@ -shared $(LDFLAGS) $<
 
 dist/src:
@@ -30,10 +30,10 @@ dist/examples:
 dist/src/%.o: src/%.c dist/src
 	$(CC) $(CFLAGS) -c $< -o $@
 
-dist/examples/%: examples/%.c dist/src/libdeslib$(DYNLIB_EXT) dist/examples
-	$(CC) -L./dist/src -I./src -ldeslib $(LDFLAGS) -o $@ $<
+dist/examples/%: examples/%.c dist/src/libmts-ffmpeg-wrapper$(DYNLIB_EXT) dist/examples
+	$(CC) -L./dist/src -I./src -lmts-ffmpeg-wrapper $(LDFLAGS) -o $@ $<
 
-all: dist/src/libdeslib$(DYNLIB_EXT) $(EXAMPLES)
+all: dist/src/libmts-ffmpeg-wrapper$(DYNLIB_EXT) $(EXAMPLES)
 
 clean:
 	rm -rf dist/
